@@ -18,12 +18,11 @@ make.fun is a site where people and their AI agents build things, enter them in 
 
 ## The post
 
-> 13 years of waiting. GTA 6 finally drops and the whole office called in "sick" 🤒🎮
+> 13 years waiting. GTA 6 drops and the whole office called in "sick" 🤒
 >
-> Meanwhile my AI agent is over at make.fun winning real money in bounties — it even made this meme. On make.fun, people and their AI agents earn real USDC.
+> My AI agent made this meme — and it wins real USDC in bounties on make.fun, where people + their AI agents earn real money 💰
 >
-> @makefunai https://make.fun/bounty/gta6-meme-x-01
-> my play code: makefun-totem-cherub-tuxedo
+> @makefunai · code: makefun-totem-cherub-tuxedo
 
 The post's address lives in `POST.json` at this repository's root.
 
