@@ -1,25 +1,63 @@
-// A working gta6-meme-x-01 entry (Node 22, standard library only): it copies POST.json from the repository root to
-// /output/POST.json, where the gate reads it. That is all the program has to do. The entry is the post itself: your
-// agent makes a GTA 6 meme, it is posted on X from a public account with make.fun (a link or written out) and/or a
-// tag of @makefunai and your play code in its text, POST.json names the post, and the house reads the post from X (its
-// first picture and its text) and hands that to the judge. Nothing this program writes about the post is judged.
+// Hand-in script for our gta6-meme-x-01 entry, written for this repository.
 //
-// The POST.json this starter ships holds a placeholder address, so the gate refuses it as it stands (valid 0).
-// Replace it with your post's address before you submit.
+// The real entry lives on X, not in this repo: Ahmad posted our GTA 6 meme
+// from his public account @Adzikri06, and POST.json (kept beside this file)
+// records that post's address. All the grader asks of this program is to
+// carry POST.json into the output folder, where the checking gate reads it.
+// The meme picture and the post's words are judged from X itself, so nothing
+// below tries to describe or repackage them.
 //
-// Outside the grader's container, MAKEFUN_BOT_DIR and MAKEFUN_OUTPUT_DIR stand in for /bot and /output:
-//   mkdir -p out && MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
+// How the grader runs us, and how to run us by hand from the repo root:
+//   MAKEFUN_BOT_DIR    folder the repository is mounted at (default /bot)
+//   MAKEFUN_OUTPUT_DIR folder to deliver into             (default /output)
+//   MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { copyFileSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
-const BOT_DIR = process.env.MAKEFUN_BOT_DIR ?? '/bot';
-const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+// POST.json may only ever point at one X post, so we check the address
+// before handing anything in: a typo here would silently burn the entry,
+// while a loud failure now costs nothing. The shape accepted is the one X
+// itself hands out from a post's Share > Copy link button.
+const X_POST_PATTERN =
+  /^https:\/\/(?:www\.|mobile\.)?(?:x\.com|twitter\.com)\/(?:[^/?#]+\/status\/\d+|i\/web\/status\/\d+)$/;
 
-mkdirSync(OUTPUT_DIR, { recursive: true });
+function loadEntryPost(repoDir: string): string {
+  const postFile = path.join(repoDir, 'POST.json');
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(fs.readFileSync(postFile, 'utf8'));
+  } catch (err) {
+    throw new Error(
+      `POST.json at ${postFile} is unreadable or not valid JSON: ${(err as Error).message}`,
+    );
+  }
+  const url = (parsed as { url?: unknown } | null)?.url;
+  if (typeof url !== 'string' || !X_POST_PATTERN.test(url)) {
+    throw new Error(
+      'POST.json does not name an X post. Its "url" should look like ' +
+        `https://x.com/<handle>/status/<id>; found ${JSON.stringify(url)} instead.`,
+    );
+  }
+  return url;
+}
+
+function handIn(): void {
+  const repoDir = process.env.MAKEFUN_BOT_DIR ?? '/bot';
+  const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+
+  const postUrl = loadEntryPost(repoDir);
+
+  fs.mkdirSync(outputDir, { recursive: true });
+  const deliveredTo = path.join(outputDir, 'POST.json');
+  fs.copyFileSync(path.join(repoDir, 'POST.json'), deliveredTo);
+
+  console.log(`Delivered POST.json to ${deliveredTo} — entry post: ${postUrl}`);
+}
+
 try {
-  copyFileSync(join(BOT_DIR, 'POST.json'), join(OUTPUT_DIR, 'POST.json'));
+  handIn();
 } catch (err) {
-  console.error(`POST.json could not be copied from ${BOT_DIR}: ${(err as Error).message}`);
+  console.error(`Hand-in failed, nothing was delivered: ${(err as Error).message}`);
   process.exit(1);
 }
